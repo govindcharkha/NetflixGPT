@@ -4,8 +4,12 @@ import { checkValidData } from "../utils/validate";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "../utils/firebase";
+import { useNavigate } from "react-router-dom";
+import { addUser } from "../utils/userSlice";
+import { useDispatch } from "react-redux";
 
 const Login = () => {
   const [isSignIn, setIsSignIn] = useState(true);
@@ -13,6 +17,8 @@ const Login = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
   const nameRef = useRef();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const newUserSignUpButtonClicked = (e) => {
     e.preventDefault();
@@ -21,18 +27,14 @@ const Login = () => {
 
   const userValidationOnButtonClick = (e) => {
     e.preventDefault();
-    console.log("1=================");
 
     const response = checkValidData(
       emailRef.current.value,
       passwordRef.current.value
     );
     setSignInErrorMsg(response);
-    console.log("2=================");
 
     if (!isSignIn) {
-      console.log("4=================");
-
       //Register new user
       createUserWithEmailAndPassword(
         auth,
@@ -42,7 +44,18 @@ const Login = () => {
         .then((userCredential) => {
           // Signed in
           const user = userCredential.user;
-          console.log(user);
+          updateProfile(auth.currentUser, {
+            displayName: nameRef.current.value,
+            photoURL: "https://example.com/jane-q-user/profile.jpg",
+          })
+            .then(() => {
+              const { uid, email, displayName, photoURL } = auth.currentUser;
+              dispatch(addUser({ uid, email, displayName, photoURL }));
+              navigate("/browse");
+            })
+            .catch((error) => {
+              setSignInErrorMsg(error);
+            });
         })
         .catch((error) => {
           const errorCode = error.code;
@@ -51,7 +64,6 @@ const Login = () => {
         });
     } else {
       //Sign In existing user
-      console.log("5=================");
       signInWithEmailAndPassword(
         auth,
         emailRef.current.value,
@@ -61,6 +73,7 @@ const Login = () => {
           // Signed in
           const user = userCredential.user;
           console.log(user);
+          navigate("/browse");
         })
         .catch((error) => {
           const errorCode = error.code;
