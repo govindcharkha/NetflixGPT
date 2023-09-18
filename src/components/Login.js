@@ -52,15 +52,17 @@ const Login = () => {
             .then(() => {
               const { uid, email, displayName, photoURL } = auth.currentUser;
               dispatch(addUser({ uid, email, displayName, photoURL }));
-              navigate("/browse");
+              navigate("/");
             })
             .catch((error) => {
+              console.log(error);
               setSignInErrorMsg(error);
             });
         })
         .catch((error) => {
           const errorCode = error.code;
           const errorMessage = error.message;
+          if (response) return;
           setSignInErrorMsg(errorCode + "-" + errorMessage);
         });
     } else {
@@ -79,7 +81,12 @@ const Login = () => {
         .catch((error) => {
           const errorCode = error.code;
           const errorMessage = error.message;
-          setSignInErrorMsg(errorCode + "-" + errorMessage);
+          console.log(errorCode + "-" + errorMessage);
+
+          if (response) return;
+          setSignInErrorMsg(
+            "Invalid credentials, Please SigUp if you are a new user"
+          );
         });
     }
   };
